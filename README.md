@@ -1,1 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/olxik31du2rhd8dn/branch/master?svg=true)](https://ci.appveyor.com/project/rscustom/rocksmith-custom-song-toolkit/branch/master)
+This is a fork of https://github.com/rscustom/rocksmith-custom-song-toolkit that adds a **songpacksplitter** app that, as the name implies, splits songpacks.
+
+Splitting songpacks probably isn't too helpful for most people, but I use the split songs with my https://github.com/rickparrish/Rocksmith2014.Rearranger app,
+which lets me rearrange bass/guitar arrangements for the ukulele.

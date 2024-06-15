@@ -91,8 +91,10 @@ namespace RocksmithToolkitLib.DLCPackage
         /// <param name="overridePlatform">Predefined source platform</param>
         /// <param name="decodeAudio">If set to <c>true</c> decode audio</param>
         /// <param name="overwriteSongXml">If set to <c>true</c> overwrite existing song (EOF) xml with SNG data</param>       
+        /// <param name="safeDelete">If set to <c>true</c> delete unpacked directory if it already exists</param>
+        /// <param name="extractXmlFromSng">If set to <c>true</c> extract xml from SNG file</param>
         /// <returns>Unpacked Directory Path</returns>
-        public static string Unpack(string srcPath, string destDirPath, Platform overridePlatform = null, bool decodeAudio = false, bool overwriteSongXml = false)
+        public static string Unpack(string srcPath, string destDirPath, Platform overridePlatform = null, bool decodeAudio = false, bool overwriteSongXml = false, bool safeDelete = true, bool extractXmlFromSng = true)
         {
             ExternalApps.VerifyExternalApps();
             Platform srcPlatform;
@@ -114,7 +116,7 @@ namespace RocksmithToolkitLib.DLCPackage
                     if (srcPlatform.version == GameVersion.RS2014)
                     {
                         using (var inputStream = File.OpenRead(srcPath))
-                            unpackedDir = ExtractPSARC(srcPath, destDirPath, inputStream, srcPlatform);
+                            unpackedDir = ExtractPSARC(srcPath, destDirPath, inputStream, srcPlatform, safeDelete: safeDelete);
                     }
                     else
                     {
@@ -176,7 +178,7 @@ namespace RocksmithToolkitLib.DLCPackage
 
             // PERFORM QUALITY CONTROL CHECKS
             // Extract XML from SNG and check it against the EOF XML (correct bass tuning from older toolkit/EOF xml files)
-            if (srcPlatform.version == GameVersion.RS2014)
+            if (extractXmlFromSng && (srcPlatform.version == GameVersion.RS2014))
             {
                 try
                 {
@@ -680,11 +682,16 @@ namespace RocksmithToolkitLib.DLCPackage
             set { _errMsg = value; }
         }
 
-        private static string ExtractPSARC(string srcPath, string destPath, Stream inputStream, Platform platform, bool isInitialCall = true)
+        /// <param name="safeDelete">Delete unpacked directory if it already exists</param>
+        private static string ExtractPSARC(string srcPath, string destPath, Stream inputStream, Platform platform, bool isInitialCall = true, bool safeDelete = true)
         {
             // start fresh on initial call and internalize destPath for recursion
             if (isInitialCall)
-                destPath = GetUnpackedDir(srcPath, destPath, platform);
+                destPath = GetUnpackedDir(srcPath, destPath, platform, safeDelete);
+
+            // Skip extraction if directory already exists
+            if (Directory.Exists(destPath) && !safeDelete)
+                return destPath;
 
             var psarc = new PSARC.PSARC();
             psarc.Read(inputStream, true);
@@ -858,15 +865,17 @@ namespace RocksmithToolkitLib.DLCPackage
                     if (File.Exists(Path.Combine(srcPath, "appid.appid")))
                     {
                         // PC / MAC 2014
-                        agg = fullPathInfo.EnumerateFiles("*.nt", SearchOption.TopDirectoryOnly).FirstOrDefault().FullName;
-                        var aggContent = File.ReadAllText(agg);
+                        agg = fullPathInfo.EnumerateFiles("*.nt", SearchOption.TopDirectoryOnly).FirstOrDefault()?.FullName;
+                        if (!string.IsNullOrWhiteSpace(agg)) {
+                            var aggContent = File.ReadAllText(agg);
 
-                        if (aggContent.Contains("\"dx9\""))
-                            return new Platform(GamePlatform.Pc, GameVersion.RS2014);
-                        if (aggContent.Contains("\"macos\""))
-                            return new Platform(GamePlatform.Mac, GameVersion.RS2014);
+                            if (aggContent.Contains("\"dx9\""))
+                                return new Platform(GamePlatform.Pc, GameVersion.RS2014);
+                            if (aggContent.Contains("\"macos\""))
+                                return new Platform(GamePlatform.Mac, GameVersion.RS2014);
 
-                        return new Platform(GamePlatform.Pc, GameVersion.RS2014); // Because appid.appid have only in RS2014
+                            return new Platform(GamePlatform.Pc, GameVersion.RS2014); // Because appid.appid have only in RS2014
+                        }
                     }
 
                     if (Directory.Exists(Path.Combine(srcPath, ROOT_XBOX360)))

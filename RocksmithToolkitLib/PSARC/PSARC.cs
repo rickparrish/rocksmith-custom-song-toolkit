@@ -284,7 +284,7 @@ namespace RocksmithToolkitLib.PSARC
                 entryDeflatedData.Add(entry, array3);
                 progress += step;
                 GlobalExtension.UpdateProgress.Value = (int)progress;
-                Console.WriteLine("Deflating Entries: " + ndx++);
+                Debug.WriteLine("Deflating Entries: " + ndx++);
             }
         }
 
@@ -551,7 +551,7 @@ namespace RocksmithToolkitLib.PSARC
 
                 progress += step;
                 GlobalExtension.UpdateProgress.Value = (int)progress;
-                Console.WriteLine("Writing tocData: " + entry.Id);
+                Debug.WriteLine("Writing tocData: " + entry.Id);
             }
 
             foreach (uint zLen in zLengths)
@@ -586,7 +586,7 @@ namespace RocksmithToolkitLib.PSARC
                 // use chunk write method to avoid OOM Exceptions
                 var z = zStreams[entry];
                 var len = z.Length;
-                if (len > _header.BlockSizeAlloc)
+                if (false && len > _header.BlockSizeAlloc)
                 {
                     using (var msInput = new MemoryStreamExtension(z))
                     using (var msExt = new MemoryStreamExtension())
@@ -621,7 +621,7 @@ namespace RocksmithToolkitLib.PSARC
                 //}
                 //catch (Exception ex)
                 //{
-                //    Console.WriteLine("<ERROR> _writer.Write: " + ex.Message);
+                //    Debug.WriteLine("<ERROR> _writer.Write: " + ex.Message);
                 //    _writer.Flush();
                 //    _writer.Dispose();
                 //    break;
@@ -629,7 +629,7 @@ namespace RocksmithToolkitLib.PSARC
 
                 progress += step;
                 GlobalExtension.UpdateProgress.Value = (int)progress;
-                Console.WriteLine("Writing zData: " + entry.Id);
+                Debug.WriteLine("Writing zData: " + entry.Id);
             }
 
             zStreams = null;
@@ -669,7 +669,7 @@ namespace RocksmithToolkitLib.PSARC
 
                         progress += step;
                         GlobalExtension.UpdateProgress.Value = (int)progress;
-                        Console.WriteLine("Writing encryptedData: " + ndx++);
+                        Debug.WriteLine("Writing encryptedData: " + ndx++);
                     }
 
                     inputStream.Position = 0;
